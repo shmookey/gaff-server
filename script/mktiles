@@ -1,0 +1,8 @@
+#!/bin/sh
+MAPS="initial"
+MAPDIR="/home/shmookey/public-html/images/maps"
+for map in $MAPS
+do
+    tilemaker.py -s256 -Q9 -t"$MAPDIR/tiles/$map-%d-%d-%d.png" -b222222 -v $MAPDIR/$map.jpg
+done
+

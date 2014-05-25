@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" ng-app="game">
+  <head>
+    <title>mapthing</title>
+    <meta charset="utf-8" /> 
+    
+    <link rel="stylesheet" type="text/css" href="lib/panojs/style/panojs.css" />
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap-3.1.1/css/bootstrap.css" />
+    <link rel="stylesheet/less" type="text/css" href="style/core.less" />
+
+    <!-- Library includes -->
+    <script type="text/javascript" src="lib/jquery-2.1.1/js/jquery.js"></script>
+    <script type="text/javascript" src="lib/angular-1.2.16/js/angular.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-3.1.1/js/bootstrap.js"></script>
+    <script type="text/javascript" src="lib/extjs/js/ext-core.js"></script> 
+    <script type="text/javascript" src="lib/panojs/js/utils.js"></script>    
+    <script type="text/javascript" src="lib/panojs/js/PanoJS.js"></script>
+    <script type="text/javascript" src="lib/panojs/js/controls.js"></script>
+    <script type="text/javascript" src="lib/panojs/js/control_thumbnail.js"></script>
+    <script type="text/javascript" src="lib/panojs/js/control_info.js"></script>
+    <script type="text/javascript" src="lib/panojs/js/control_svg.js"></script>
+    <script type='text/javascript'>less = {env:'development',async:false};</script>
+    <script type='text/javascript' src='/lib/less-1.5.0/js/less.min.js'></script>
+
+    
+    <!-- Game logic -->
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/map.js"></script>
+    <script type="text/javascript" src="js/world.js"></script>
+    <script type="text/javascript" src="js/map-location.js"></script>
+    <script type="text/javascript" src="js/scene.js"></script>
+    <script type="text/javascript" src="js/scene-item.js"></script>
+    <script type="text/javascript" src="js/item-inspector.js"></script>
+    <script type="text/javascript" src="js/player.js"></script>
+    <script type="text/javascript" src="js/renderer.js"></script>
+    <script type="text/javascript" src="js/debugger.js"></script>
+  </head>
+  <body>
+    <game> 
+      <map></map>
+      <scene></scene>
+      <item-inspector></item-inspector>
+      <debugger></debugger>
+    </game>
+  </body>
+</html>

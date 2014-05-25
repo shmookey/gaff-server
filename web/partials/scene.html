@@ -1,0 +1,8 @@
+<div class="scene" ng-class="{visible:visible}">
+  <div class="background" ng-click="dismiss()"></div>
+  <div class="frame" ng-style="imageStyle" ng-mousemove="onMouseMove($event)">
+    <div ng-repeat="item in items">
+      <scene-item ng-model="item"></scene-item>
+    </div>
+  </div>
+</div>
