@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" ng-app="compiler">
+  <head>
+    <title>Gaff Compiler</title>
+    <meta charset="utf-8" /> 
+    
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap-3.1.1/css/bootstrap.css" />
+    <link rel="stylesheet/less" type="text/css" href="style/compiler.less" />
+
+    <!-- Library includes -->
+    <script type="text/javascript" src="lib/jquery-2.1.1/js/jquery.js"></script>
+    <script type="text/javascript" src="lib/angular-1.2.16/js/angular.js"></script>
+    <script type="text/javascript" src="lib/angular-1.2.16/js/angular-sanitize.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-3.1.1/js/bootstrap.js"></script>
+    <script type='text/javascript'>less = {env:'development',async:false};</script>
+    <script type='text/javascript' src='/lib/less-1.5.0/js/less.min.js'></script>
+
+    <!-- Application logic -->
+    <script type="text/javascript" src="js/compiler.js"></script>
+  </head>
+  <body>
+    <compiler></compiler>
+  </body>
+</html>

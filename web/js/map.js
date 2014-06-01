@@ -23,23 +23,23 @@ game.service ('WorldMap', ['$document', 'World', function($document, World) {
     this.screenSize.height = $document[0].documentElement.clientHeight;
 
     this.loadMap = function (mapName) {
-        var map = World[mapName];
+        var map = World.data;//[mapName];
         self.mapName = mapName;
-        self.mapSize.width = map.size.width;
-        self.mapSize.height = map.size.height;
+        self.mapSize.width = map.size[0];
+        self.mapSize.height = map.size[1];
         self.zoomLevel = map.zoomStart;
         self.zoomMax = map.zoomMax;
         self.zoomScale = Math.pow(2,self.zoomMax-self.zoomLevel);
-        self.mapViewport.x1 = map.panStart.x;
-        self.mapViewport.y1 = map.panStart.y;
-        self.mapViewport.x2 = map.panStart.x + self.screenSize.width*self.zoomScale;
-        self.mapViewport.y2 = map.panStart.y + self.screenSize.height*self.zoomScale;
+        self.mapViewport.x1 = map.panStart[0];
+        self.mapViewport.y1 = map.panStart[1];
+        self.mapViewport.x2 = map.panStart[0] + self.screenSize.width*self.zoomScale;
+        self.mapViewport.y2 = map.panStart[1] + self.screenSize.height*self.zoomScale;
         self.screenViewport.x1 = self.mapViewport.x1 / self.zoomScale;
         self.screenViewport.y1 = self.mapViewport.y1 / self.zoomScale;
         self.screenViewport.x2 = self.mapViewport.x2 / self.zoomScale;
         self.screenViewport.y2 = self.mapViewport.y2 / self.zoomScale;
         self.viewportRestricted = map.viewportRestricted;
-        self.locations = angular.copy(map.locations);
+        self.locations = map.scenes;
         self.updateLocations ();
     };
 
@@ -83,10 +83,10 @@ game.service ('WorldMap', ['$document', 'World', function($document, World) {
         for (var i=0; i<self.locations.length; i++) {
             var loc = self.locations[i];
             loc.screenRegion = [
-                (loc.region[0] - viewport.x1) * scale,
-                (loc.region[1] - viewport.y1) * scale,
-                loc.region[2] * scale,
-                loc.region[3] * scale,
+                (loc.mapRegion[0] - viewport.x1) * scale,
+                (loc.mapRegion[1] - viewport.y1) * scale,
+                loc.mapRegion[2] * scale,
+                loc.mapRegion[3] * scale,
             ];
         }
     };

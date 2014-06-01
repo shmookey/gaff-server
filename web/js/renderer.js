@@ -19,7 +19,7 @@ game.directive ('renderer', function () {
             PanoJS.USE_SLIDE = false;
             PanoJS.MAX_OVER_ZOOM = 0;
             viewer = new PanoJS(viewerElement, {
-                tileBaseUri     : 'images/maps/tiles/',
+                tileBaseUri     : 'images/maps/tiles',
                 tilePrefix      : mapName + '-',
                 tileSize        : 256,
                 imageWidth      : WorldMap.mapSize.width,
@@ -35,11 +35,11 @@ game.directive ('renderer', function () {
                 loadingTile     : 'lib/panojs/images/progress.gif'
             });
             if (!viewer.maximized) viewer.toggleMaximize();
+            viewer.init();
             Ext.EventManager.addListener (window, 'resize', callback (viewer, viewer.resize));
             Ext.EventManager.addListener (window, 'resize', callback (WorldMap, WorldMap.onResize));
             viewer.addViewerMovedListener ($scope.viewportListener);
             viewer.addViewerZoomedListener ($scope.viewportListener);
-            viewer.init();
         });
 
         $scope.viewportListener = {

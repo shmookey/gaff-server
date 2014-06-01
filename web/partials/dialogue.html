@@ -1,0 +1,10 @@
+<div class='dialogue' ng-class='{visible:visible}'>
+    <div ng-repeat='line in lines'>
+        <div class='line' ng-style='line.style'>{{ line.text }}</div>
+    </div>
+    <div class='prompt'>
+        <div ng-repeat='option in prompt'>
+            <a href=''>{{ option.content }}</a>
+        </div>
+    </div> 
+</div>

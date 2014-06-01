@@ -13,8 +13,13 @@ game.directive('ngRightClick', function($parse) {
 });
 
 game.directive ('game', function() {
-    var controller = ['$scope', 'WorldMap', function($scope, WorldMap) {
-        WorldMap.loadMap ('initial');
+    var controller = ['$scope', '$http', 'World', 'WorldMap', 'Assets', 'Character', function($scope, $http, World, WorldMap, Assets, Character) {
+        $http.get('api/world').success(function(data) {
+            World.data = data;
+            Assets.imageRefs = data.imageRefs;
+            WorldMap.loadMap ('initial');
+            Character.onLoad (data.characters);
+        });
     }];
     return {
         restrict: 'E',

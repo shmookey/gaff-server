@@ -2,25 +2,28 @@ game.service ('Scene', [function () {
     var self = this;
 
     this.name = null;
-    this.items = null;
+    this.interactions = null;
     this.bgImage = null;
+    this.bgSize = null;
     this.config = null;  // Ref to source data
 
     this.active = false;
 
     this.set = function (scene) {
         self.config = scene;
-        self.items = scene.items;
+        self.interactions = scene.interactions;
         self.name = scene.name;
         self.bgImage = scene.bgImage;
+        self.bgSize = scene.bgSize;
         self.active = true;
     };
 
     this.clear = function () {
         self.config = null;
-        self.items = null;
+        self.interactions = null;
         self.name = null;
         self.bgImage = null;
+        self.bgSize = null;
         self.active = false;
     }
 
@@ -28,19 +31,24 @@ game.service ('Scene', [function () {
 }]);
 
 game.directive ('scene', function () {
-    var controller = ['$scope', 'WorldMap', 'Scene', 'Player', 'Debugger',
-      function ($scope, WorldMap, Scene, Player, Debugger) {
+    var controller = ['$scope', 'WorldMap', 'Scene', 'Player', 'Assets', 'Debugger',
+      function ($scope, WorldMap, Scene, Player, Assets, Debugger) {
         $scope.visible = false;
         $scope.imageStyle = null;
-        $scope.items = null;
+        $scope.interactions = null;
 
         $scope.$watch (function(){return Scene.name;}, function(name) {
             if (Scene.active) {
                 $scope.visible = true;
+                var imageURI = Assets.getImageURI (Scene.bgImage);
                 $scope.imageStyle = {
-                    'background-image': 'url(images/scenes/' + Scene.bgImage + ')',
+                    'background-image': 'url(' + imageURI + ')',
+                    'width': Scene.bgSize[0] + 'px',
+                    'height': Scene.bgSize[1] + 'px',
+                    'margin-left': (-Scene.bgSize[0]/2) + 'px',
+                    'margin-top': (-Scene.bgSize[1]/2) + 'px',
                 };
-                $scope.items = Scene.items;
+                $scope.interactions = Scene.interactions;
             } else {
                 $scope.visible = false;
                 $scope.imageStyle = null;

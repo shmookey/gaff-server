@@ -4,7 +4,11 @@ game.service ('ItemInspector', [function () {
     this.item = null;
 
     this.inspect = function (item) {
-        this.item = item;
+        if (item.closeUpImage) {
+            this.item = item;
+        } else {
+            console.log ("Can't inspect item with no close-up image");
+        }
     };
 
     this.close = function () {

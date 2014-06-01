@@ -221,8 +221,10 @@ PanoJS.prototype.init = function() {
       fullWidth = cur_size.width;
       fullHeight = cur_size.height;    
     }
-    this.x = Math.floor((fullWidth - this.width) * -this.initialPan.x);
-    this.y = Math.floor((fullHeight - this.height) * -this.initialPan.y);
+    //this.x = Math.floor((fullWidth - this.width) * -this.initialPan.x);
+    //this.y = Math.floor((fullHeight - this.height) * -this.initialPan.y);
+    this.x = -this.initialPan.x;
+    this.y = -this.initialPan.y;
 
        
     // offset of viewer in the window
@@ -844,26 +846,26 @@ PanoJS.prototype.moveViewer = function(coords) {
   var s = this.currentImageSize();
   var xd = coords.x - this.mark.x;
   var yd = coords.y - this.mark.y;
-  var right = this.x + xd + s.width - this.width;
-  var bottom = this.y + yd + s.height - this.height;
-  var left = this.x + xd;
-  var top = this.y + yd;
-  if (left > 0) {
-    xd -= left;
-    coords.x -= left;
-  }
-  if (top > 0) {
-    yd -= top;
-    coords.y -= top;
-  }
-  if (right < 0) {
-    xd -= right;
-    coords.x -= right;
-  }
-  if (bottom < 0) {
-    yd -= bottom;
-    coords.y -= bottom;
-  }
+  //var right = this.x + xd + s.width - this.width;
+  //var bottom = this.y + yd + s.height - this.height;
+  //var left = this.x + xd;
+  //var top = this.y + yd;
+  //if (left > 0) {
+  //  xd -= left;
+  //  coords.x -= left;
+  //}
+  //if (top > 0) {
+  //  yd -= top;
+  //  coords.y -= top;
+  //}
+  //if (right < 0) {
+  //  xd -= right;
+  //  coords.x -= right;
+  //}
+  //if (bottom < 0) {
+  //  yd -= bottom;
+  //  coords.y -= bottom;
+  //}
   this.positionTiles({ 'x' : xd, 'y' : yd });
   this.notifyViewerMoved(coords);
 };

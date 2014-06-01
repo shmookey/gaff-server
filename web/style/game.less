@@ -1,0 +1,85 @@
+// game.less -- Game element styles
+
+@import (reference) "ui.less";
+@import (reference) "constants.less";
+
+map {
+    .layerMap();
+    .fullscreen();
+}
+
+.map-location {
+    .layerMap();
+    .region();
+    position: fixed;
+}
+
+.scene {
+    .layerScene();
+    .modal();
+  
+    .background {
+        .layerScene();
+        .modalBg();
+    }
+
+    .frame {
+        .layerScene();
+        
+        width: 960px; height: 540px;
+        left: 50%; margin-left: -480px;
+        top: 50%; margin-top: -270px;
+        position: fixed;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        >div { position: absolute; height: 100%; width: 100%; }
+        .scene-interaction {
+            .layerItem();
+            .region();
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+        .dialogue {
+            .layerDialogue();
+            position: absolute;
+            .line {
+                .layerDialogue();
+                position: absolute;
+
+            }
+        }
+    }
+}
+
+.item-inspector {
+    .layerItem();
+    .modal();
+    .background {
+        .layerItem();
+        .modalBg();
+    }
+    .frame {
+        .layerItem();
+        
+        width: 768px; height: 575px;
+        left: 50%; margin-left: -384px;
+        top: 50%; margin-top: -287px;
+        position: fixed;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        >div { position: absolute; height: 100%; width: 100%; }
+        .scene-interaction {
+            .layerItem();
+            .region();
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+    }
+}
+
