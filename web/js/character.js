@@ -1,3 +1,5 @@
+// character.js -- Gaff character provider
+
 function CharacterNotFound(name){this.characterName=name;}
 CharacterNotFound.prototype = GaffException;
 

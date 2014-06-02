@@ -1,5 +1,5 @@
 game.service ('Debugger', ['WorldMap', function(WorldMap) {
-    this.showRegions = true;
+    this.showRegions = false;
     this.mousePositionRelative = [0,0];
     this.mousePositionScreen = [0,0];
 

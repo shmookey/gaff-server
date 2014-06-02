@@ -97,6 +97,7 @@ class WorldJSONExporter (object):
 
     def export_dialogue (self, dialogue):
         return {
+            'event': 'dialogue',
             'name': dialogue.name,
             'lines': [self.export_dialogue_line(line) for line in dialogue.lines],
         }
@@ -111,12 +112,23 @@ class WorldJSONExporter (object):
         elif isinstance(line, pygaff.world.DialoguePrompt):
             return {
                 'event': 'prompt',
+                'name': line.name,
                 'options': [{
                     'label': option.label,
                     'result': [self.export_dialogue_line(line) for line in option.result],
                 } for option in line.options],
             }
-        raise TypeError ('Lines must be of "DialogueLine" or "DialoguePrompt" type, not %s' % type(line))
+        elif isinstance(line, pygaff.world.DialogueJump):
+            return {
+                'event': 'jump',
+                'target': line.target,
+            }
+        elif isinstance(line, pygaff.world.DialogueGrant):
+            return {
+                'event': 'grant',
+                'flag': line.flag,
+            }
+        raise TypeError ('Lines must be of Dialogue event type, not %s' % type(line))
                             
     def to_obj (self):
         world = self.world
@@ -141,13 +153,19 @@ class WorldJSONExporter (object):
                     'linkedCharacter': interaction.linkedCharacter,
                     'defaultAction': interaction.defaultAction,
                     'overlayImage': interaction.overlayImage,
+                    'actions': {actionType: [{
+                            'condition': actionMapping.condition,
+                            'action': actionMapping.action,
+                        } for actionMapping in actionMappings
+                    ] for (actionType, actionMappings) in interaction.actions.items()},
                 } for interaction in scene.interactions]
             } for scene in world.scenes],
             'characters': {character.name: {
                 'name': character.name,
                 'tooltip': character.tooltip,
                 'image': character.image,
-                'dialogues': [self.export_dialogue(dialogue) for dialogue in character.dialogues],
+                'speechColor': character.speechColor,
+                'dialogues': {dialogue.name: self.export_dialogue(dialogue) for dialogue in character.dialogues},
             } for character in world.characters},
             'items': [{
                 'name': item.name,

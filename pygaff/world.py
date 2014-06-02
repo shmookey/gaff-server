@@ -5,6 +5,7 @@ class Character (object):
         self.name = None
         self.tooltip = None
         self.image = None
+        self.speechColor = None
         self.dialogues = []
 
 class Dialogue (object):
@@ -24,7 +25,16 @@ class DialogueOption (object):
 
 class DialoguePrompt (object):
     def __init__ (self):
+        self.name = None
         self.options = []
+
+class DialogueJump (object):
+    def __init__ (self):
+        self.target = None
+
+class DialogueGrant (object):
+    def __init__ (self):
+        self.flag = None
 
 class Item (object):
     def __init__ (self):
@@ -49,6 +59,12 @@ class SceneInteraction (object):
         self.tooltip = None
         self.defaultAction = None
         self.overlayImage = None
+        self.actions = {}
+
+class ActionMapping (object):
+    def __init__ (self):
+        self.condition = None
+        self.action = None
 
 class World (object):
     def __init__ (self):

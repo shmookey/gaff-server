@@ -7,6 +7,7 @@ import pygaff.log
 
 import sys
 from datetime import datetime
+import traceback
 
 class CustomDict (dict): 
     def gettext (self, k, d = None):
@@ -44,12 +45,17 @@ class WorldCompiler (object):
                 world.zoomStart = int(params.gettext('zoom-start'))
                 world.viewportRestricted = params.gettext('viewport-restricted') == 'yes'
 
-        world.scenes = self.compile_all_scenes(imageRefs)
-        world.characters = self.compile_all_characters(imageRefs)
-        world.items = self.compile_all_items(imageRefs)
-        
-        self.link (imageRefs)
-        world.imageRefs = imageRefs
+        try:
+            world.scenes = self.compile_all_scenes(imageRefs)
+            world.characters = self.compile_all_characters(imageRefs)
+            world.items = self.compile_all_items(imageRefs)
+            self.link (imageRefs)
+            world.imageRefs = imageRefs
+        except Exception as e:
+            self.log.error ('Fatal error during compilation: unhandled exception.')
+            tb_lines = traceback.format_exc().strip().split('\n')
+            for line in tb_lines: self.log.debug (line)
+            
         return world
 
     def link (self, imageRefs):
@@ -104,6 +110,7 @@ class WorldCompiler (object):
             if obj_name == 'Infobox Character':
                 character.name = params.gettext('name')
                 character.tooltip = params.gettext('tooltip')
+                character.speechColor = params.gettext('speech-color')
                 character.image = params.gettext('image')
                 if character.image and not character.image in imageRefs:
                     imageRefs[character.image] = None
@@ -149,8 +156,12 @@ class WorldCompiler (object):
                         int(params.gettext('map-height')),
                     ]
                     scene.tooltip = params.gettext ('tooltip', scene.name)
+
             elif obj_name == 'Scene Interaction':
                 interaction = pygaff.world.SceneInteraction ()
+
+                # Determine interaction region
+                # Regions are specified as edge positions
                 try:
                     interaction.region = [
                         int(params.gettext('left')),
@@ -160,6 +171,8 @@ class WorldCompiler (object):
                     ]
                 except:
                     self.log.error ('Could not extract interaction region.')
+
+                # Extract general metadata
                 interaction.overlayImage = params.gettext('overlay-image')
                 if interaction.overlayImage and not interaction.overlayImage in imageRefs:
                     imageRefs[interaction.overlayImage] = None
@@ -167,10 +180,71 @@ class WorldCompiler (object):
                 interaction.linkedItem = params.gettext('linked-item')
                 interaction.defaultAction = params.gettext('default-action')
                 interaction.linkedCharacter = params.gettext('linked-character')
+                
+                # Compile action mappings
+                paramActionMap = params.get('action-talk')
+                if not paramActionMap:
+                    self.log.warning ('Scene interaction with tooltip %s has no action map.' % interaction.tooltip)
+                else:
+                    interaction.actions['Talk'] = self.compile_action_map (paramActionMap)
+
                 scene.interactions.append (interaction)
         return scene
 
+    def compile_action_map (self, source):
+        '''Construct a list of ActionMappings from an ActionMap wiki template.
+        
+        Arguments
+         source -- Contents of action-map argument to SceneInteraction
+        '''
+
+        # Look for templates inside the provided action-map argument source
+        templates = source.filter_templates(recursive=False)
+        if len(templates) == 0:
+            self.log.error ('Argument action-map appears to contain no templates.')
+            return []
+        elif len(templates) > 1:
+            self.log.warning ('Ignoring extraneous data in action-map argument (found %i extra templates).' % len(templates))
+
+        # Extract the ActionMap template from the action-map argument
+        template = templates[0]
+        tmpl_name = template.name.strip()
+        if not tmpl_name == 'ActionMap':
+            self.log.error ('Argument action-map contains unexpected template %s' % tmpl_name)
+            return []
+        if len(template.params) == 0:
+            self.log.warning ('Created an empty action map.')
+            return []
+
+        actions = []
+        for param in template.params:
+            # Ignore the 'name' parameter for now
+            if param.name.strip() == 'name': continue
+            # Each numbered param should contain a single 'When' template
+            child_source = param.value
+            child_templates = child_source.filter_templates(recursive=False)
+            if len(child_templates) == 0:
+                self.log.warning ('Skipping ActionMap argument containing no templates (expecting a "When" template)')
+                continue
+            if len(child_templates) > 1:
+                self.log.warning ('Skipping extraneous data in ActionMap argument (expecting a single "When" template)')
+                continue
+            tmpl_when = child_templates[0]
+            tmpl_when_name = tmpl_when.name.strip()
+            if not tmpl_when_name == 'When':
+                self.log.warning ('Skipping ActionMap argument containing unexpected template (expected "When", got "%s")' % tmpl_when_name)
+                continue
+
+            action = pygaff.world.ActionMapping ()
+            action.condition = tmpl_when.get(1).strip()
+            action.action = tmpl_when.get(2).strip()
+            actions.append(action)
+
+        return actions
+
     def compile_dialogue (self, source):
+        '''Construct a Dialogue object from a Dialogue wiki template.'''
+
         dialogue = pygaff.world.Dialogue ()
         dialogue.name = source.gettext ('name')
         lines_source = source.get('lines').filter_templates(recursive=False)[0]
@@ -178,6 +252,8 @@ class WorldCompiler (object):
         return dialogue
 
     def compile_dialogue_lines (self, source):
+        '''Construct a list of DialogueLines from a Lines wiki template.'''
+
         lines = []
         name = source.name.strip()
         if not name == 'Lines':
@@ -191,9 +267,19 @@ class WorldCompiler (object):
             elif tmplname == 'Prompt':
                 prompt = self.compile_dialogue_prompt (tmpl)
                 lines.append (prompt)
+            elif tmplname == 'Jump':
+                jump = self.compile_dialogue_jump (tmpl)
+                lines.append (jump)
+            elif tmplname == 'Grant':
+                grant = self.compile_dialogue_grant (tmpl)
+                lines.append (grant)
+            else:
+                self.log.warning ('Unknown directive in dialogue lines: %s' % tmplname)
         return lines
                         
     def compile_dialogue_line (self, source):
+        '''Construct a DialogueLine from a Line wiki template.'''
+
         name = source.name.strip()
         if not name == 'Line':
             raise ValueError ('Expected "Line" template, got %s' % name)
@@ -204,16 +290,50 @@ class WorldCompiler (object):
         line.content = source.get(2).strip()
         return line
 
+    def compile_dialogue_jump (self, source):
+        '''Construct a DialogueJump from a Jump wiki template.'''
+
+        name = source.name.strip()
+        if not name == 'Jump':
+            raise ValueError ('Expected "Jump" template, got %s' % name)
+        if not len(source.params) == 1:
+            raise ValueError ('Jump template must have exactly 1 argument, got %i' % len(source.params))
+        jump = pygaff.world.DialogueJump()
+        jump.target = source.get(1).strip()
+        return jump
+
+    def compile_dialogue_grant (self, source):
+        '''Construct a DialogueGrant from a Grant wiki template.'''
+
+        name = source.name.strip()
+        if not name == 'Grant':
+            raise ValueError ('Expected "Grant" template, got %s' % name)
+        if not len(source.params) == 1:
+            raise ValueError ('Grant template must have exactly 1 argument, got %i' % len(source.params))
+        grant = pygaff.world.DialogueGrant()
+        grant.flag = source.get(1).strip()
+        return grant
+
     def compile_dialogue_prompt (self, source):
+        '''Construct a DialoguePrompt from a Prompt wiki template.'''
+
         name = source.name.strip()
         if not name == 'Prompt':
             raise ValueError ('Expected "Prompt" template, got %s' % name)
         prompt = pygaff.world.DialoguePrompt()
+
         for prompt_param in source.params:
+            if prompt_param.name.strip() == 'name':
+                # This is the named argument 'name' on the prompt template
+                prompt.name = prompt_param.value.strip()
+                continue
+            
+            # Assume that all other parameters are Options
             tmpl = prompt_param.value.filter_templates(recursive=False)[0]
             tmplname = tmpl.name.strip()
             if not tmplname == 'Option':
                 raise ValueError ('Expected "Option" template, got %s' % tmplname)
+
             option = pygaff.world.DialogueOption()
             option.label = tmpl.get('label').value.strip()
             result = tmpl.get('result').value.filter_templates(recursive=False)[0]
@@ -224,6 +344,7 @@ class WorldCompiler (object):
 
     def parse_objects (self, source):
         '''Extract template parameter objects from the wikitext markup.'''
+
         code = parser.parse(source['revisions'][0]['*'])
         templates = code.filter_templates()
         for template in templates:

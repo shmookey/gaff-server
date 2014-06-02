@@ -1,12 +1,21 @@
-game.service ('SceneInteraction', ['Character', 'Dialogue', 'ItemInspector', function(Character, Dialogue, ItemInspector) {
+game.service ('SceneInteraction', ['Player', 'Character', 'Dialogue', 'ItemInspector', function(Player, Character, Dialogue, ItemInspector) {
     this.activate = function (interaction) {
-        var action = interaction.defaultAction.split ('::');
-        var actionType = action[0];
-        if (actionType == 'Talk') {
-            var character = Character.get(interaction.linkedCharacter);
-            var dialogueName = action[1];
-            Dialogue.beginDialogue (character, dialogueName);
+        var actionMap = interaction.actions[interaction.defaultAction];
+
+        // Run the action for the first mapping condition that passes
+        for (var i=0; i<actionMap.length; i++) {
+            var mapping = actionMap[i];
+            if (!Player.evaluateCondition (mapping.condition)) continue;
+            var action = mapping.action.split ('::');
+            
+            if (action[0] == 'Talk') {
+                var character = Character.get(interaction.linkedCharacter);
+                var dialogueName = action[1];
+                Dialogue.beginDialogue (character, dialogueName, interaction);
+            }
+            return;
         }
+        console.log ('No passing action mappings found!');
     };
 
     return this;

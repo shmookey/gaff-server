@@ -1,10 +1,11 @@
-<div class='dialogue' ng-class='{visible:visible}'>
+<div class='dialogue' ng-class='{visible:visible}' ng-click='step()'>
+    <div class='background'></div>
     <div ng-repeat='line in lines'>
-        <div class='line' ng-style='line.style'>{{ line.text }}</div>
+        <div class='line' ng-style='line.style' ng-class='{player:line.player}'>{{ line.content }}</div>
     </div>
     <div class='prompt'>
-        <div ng-repeat='option in prompt'>
-            <a href=''>{{ option.content }}</a>
+        <div class='option' ng-repeat='option in prompt'>
+            <span ng-click='selectOption($index, $event);'>{{ option.label }}</span>
         </div>
     </div> 
 </div>

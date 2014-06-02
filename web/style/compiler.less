@@ -57,17 +57,18 @@ html, body {
         display: inline-block;
       }
       &.WARNING {
-        background-color: @orange;
+        color: @yellow;
       }
       &.ERROR {
-        background-color: @red;
+        color: @red;
+        //color: @base03;
       }
       &.INFO {
-        background-color: @blue;
-        color: @base3;
+        color: @blue;
+        //background-color: @base3;
       }
       &.DEBUG {
-        background-color: @base03;
+        //color: @base03;
       }
     }
   }
@@ -95,7 +96,7 @@ html, body {
         .field-name { color: @cyan; }
         .string { color: @yellow; }
         .number { color: @magenta; }
-        .null { color: @green; }
+        .keyword { color: @green; }
         .array { color: @blue; }
         .brace { color: @violet; }
       }

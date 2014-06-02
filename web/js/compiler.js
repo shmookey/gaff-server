@@ -25,18 +25,14 @@ app.directive ('compiler', function() {
                 lines[i] = lines[i].replace (/"([^"]+)":/,'"<span class="field-name">$1</span>":');
                 lines[i] = lines[i].replace (/: "([^"]+)"/,': "<span class="string">$1</span>"');
                 lines[i] = lines[i].replace (/: ([0-9.-]+)/,': <span class="number">$1</span>');
-                lines[i] = lines[i].replace (/: null/,': <span class="null">null</span>');
+                lines[i] = lines[i].replace (/: null/,': <span class="keyword">null</span>');
+                lines[i] = lines[i].replace (/: true/,': <span class="keyword">true</span>');
+                lines[i] = lines[i].replace (/: false/,': <span class="keyword">false</span>');
                 lines[i] = lines[i].replace (/: \[/, ': <span class="array">[</span>');
                 lines[i] = lines[i].replace (/(\])(, )?$/,'<span class="array">$1</span>$2');
-                lines[i] = lines[i].replace (/{$/,'<span class="brace">{</span>');
+                lines[i] = lines[i].replace (/{(}, )?$/,'<span class="brace">{</span>$1');
                 lines[i] = lines[i].replace (/}(, )?$/,'<span class="brace">}</span>$1');
                 lines[i] = lines[i].replace (/([0-9.-]+)(, )?$/,'<span class="number">$1</span>$2');
-                //var parts = line.split (':');
-                //if (parts.length > 1) {
-                //    var field = parts[0];
-                //    var val = parts[
-                //    parts[0] = field.replace (/"([^"]*)"/,'<span class="field-name">$1</span>');
-                //}
             }
             $scope.output = lines;
         });

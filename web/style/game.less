@@ -4,82 +4,122 @@
 @import (reference) "constants.less";
 
 map {
-    .layerMap();
-    .fullscreen();
+  .layerMap();
+  .fullscreen();
+  .tooltip {
+    .layerMapUI();
+  }
 }
 
 .map-location {
-    .layerMap();
-    .region();
-    position: fixed;
+  .layerMap();
+  .region();
+  position: fixed;
 }
 
 .scene {
-    .layerScene();
-    .modal();
+  .layerScene();
+  .modal();
   
-    .background {
-        .layerScene();
-        .modalBg();
+  > .background {
+    .layerScene();
+    .modalBg();
+  }
+
+  .frame {
+    .layerScene();
+    
+    width: 960px; height: 540px;
+    left: 50%; margin-left: -480px;
+    top: 50%; margin-top: -270px;
+    position: fixed;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    >div { position: absolute; height: 100%; width: 100%; }
+    .scene-interaction {
+      .layerItem();
+      .region();
+      position: absolute;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: 50%;
     }
-
-    .frame {
+    .dialogue {
+      .layerDialogue();
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      visibility: hidden;
+      &.visible { visibility: visible; }
+      .background {
         .layerScene();
-        
-        width: 960px; height: 540px;
-        left: 50%; margin-left: -480px;
-        top: 50%; margin-top: -270px;
-        position: fixed;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: 50%;
-        >div { position: absolute; height: 100%; width: 100%; }
-        .scene-interaction {
-            .layerItem();
-            .region();
-            position: absolute;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: 50%;
+        .fullscreen();
+      }
+      .line {
+        .layerDialogue();
+        position: absolute;
+        font-size: 1.25em;
+        cursor: default;
+        text-shadow: 2px -2px 2px black;
+        &.player {
+          bottom: 30px;
+          width: 100%;
+          text-align: center;
+          color: yellow;
         }
-        .dialogue {
-            .layerDialogue();
-            position: absolute;
-            .line {
-                .layerDialogue();
-                position: absolute;
-
+      }
+      .prompt {
+        .layerDialogue();
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        .option {
+          height: 25px;
+          line-height: 25px;
+          vertical-align: middle;
+          font-size: 1.1em;
+          span {
+            color: yellow;
+            text-decoration: none;
+            text-shadow: 0px 0px 5px black;
+            cursor: pointer;
+            &:hover {
+              font-weight: bold;
             }
+          }
         }
+      }
     }
+  }
 }
 
 .item-inspector {
+  .layerItem();
+  .modal();
+  .background {
     .layerItem();
-    .modal();
-    .background {
-        .layerItem();
-        .modalBg();
+    .modalBg();
+  }
+  .frame {
+    .layerItem();
+    
+    width: 768px; height: 575px;
+    left: 50%; margin-left: -384px;
+    top: 50%; margin-top: -287px;
+    position: fixed;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    >div { position: absolute; height: 100%; width: 100%; }
+    .scene-interaction {
+      .layerItem();
+      .region();
+      position: absolute;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: 50%;
     }
-    .frame {
-        .layerItem();
-        
-        width: 768px; height: 575px;
-        left: 50%; margin-left: -384px;
-        top: 50%; margin-top: -287px;
-        position: fixed;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: 50%;
-        >div { position: absolute; height: 100%; width: 100%; }
-        .scene-interaction {
-            .layerItem();
-            .region();
-            position: absolute;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: 50%;
-        }
-    }
+  }
 }
 
