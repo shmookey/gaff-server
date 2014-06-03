@@ -1,17 +1,39 @@
 game.service ('SceneInteraction', ['Player', 'Character', 'Dialogue', 'ItemInspector', function(Player, Character, Dialogue, ItemInspector) {
+    function RunAction (action) {
+        for (var i=0; i<action.length; i++) {
+            var command = action[i];
+            if (command.event == 'narrate')
+                Narrate (command.content);
+            else if (command.event == 'moveto')
+                MoveTo (command.destination);
+        }
+    }
+
+    function Narrate (content) {
+        
+    }
+
+    function MoveTo (destination) {
+
+    }
+
     this.activate = function (interaction) {
-        var actionMap = interaction.actions[interaction.defaultAction];
+        var actionMap = interaction.actionMappings[interaction.defaultAction];
 
         // Run the action for the first mapping condition that passes
         for (var i=0; i<actionMap.length; i++) {
             var mapping = actionMap[i];
             if (!Player.evaluateCondition (mapping.condition)) continue;
-            var action = mapping.action.split ('::');
+            var actionParts = mapping.action.split ('::');
             
-            if (action[0] == 'Talk') {
+            if (actionParts[0] == 'Talk') {
                 var character = Character.get(interaction.linkedCharacter);
-                var dialogueName = action[1];
+                var dialogueName = actionParts[1];
                 Dialogue.beginDialogue (character, dialogueName, interaction);
+            } else {
+                // Other action types are considered generic
+                var action = interaction.actions[actionName];
+                RunAction(action);
             }
             return;
         }

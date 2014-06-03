@@ -36,6 +36,19 @@ class DialogueGrant (object):
     def __init__ (self):
         self.flag = None
 
+class CommandNarrate (object):
+    def __init__ (self):
+        self.content = None
+
+class CommandMoveTo (object):
+    def __init__ (self):
+        self.destination = None
+
+class Action (object):
+    def __init__ (self):
+        self.name = None
+        self.commands = []
+
 class Item (object):
     def __init__ (self):
         self.name = None
@@ -59,6 +72,7 @@ class SceneInteraction (object):
         self.tooltip = None
         self.defaultAction = None
         self.overlayImage = None
+        self.actionMappings = {}
         self.actions = {}
 
 class ActionMapping (object):

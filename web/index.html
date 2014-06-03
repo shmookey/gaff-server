@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="lib/panojs/style/panojs.css" />
     <link rel="stylesheet" type="text/css" href="lib/bootstrap-3.1.1/css/bootstrap.css" />
     <link rel="stylesheet/less" type="text/css" href="style/core.less" />
+    <link rel="stylesheet/less" type="text/css" href="style/ui.less" />
 
     <!-- Library includes -->
     <script type="text/javascript" src="lib/jquery-2.1.1/js/jquery.js"></script>
@@ -45,6 +46,16 @@
       <scene></scene>
       <item-inspector></item-inspector>
       <debugger></debugger>
+      <div class='toolbar btn-toolbar'>
+        <div class='btn-group'>
+          <button type='button' class='btn btn-default' data-toggle='tooltip' data-placement='bottom' title='Map'><span class='glyphicon glyphicon-globe'></span></button>
+          <button type='button' class='btn btn-default' data-toggle='tooltip' data-placement='bottom' title='Player'><span class='glyphicon glyphicon-user'></span></button>
+          <button type='button' class='btn btn-default' data-toggle='tooltip' data-placement='bottom' title='Save'><span class='glyphicon glyphicon-floppy-disk'></span></button>
+        </div>
+        <div class='btn-group'>
+          <button type='button' ng-click='toggleDebugger()' class='btn btn-default' data-toggle='tooltip' data-placement='bottom' title='Debug' ng-class='{active:debugEnabled}'><span class='glyphicon glyphicon-wrench'></span></button>
+        </div>
+      </div>
     </game>
   </body>
 </html>

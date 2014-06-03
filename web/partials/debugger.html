@@ -1,8 +1,6 @@
-<div class="debugger">
-  <span class="glyphicon glyphicon-minus toggle" ng-show="open" ng-click="open=false"></span>
-  <span class="glyphicon glyphicon-plus toggle" ng-show="!open" ng-click="open=true"></span>
+<div class="debugger" ng-show="visible">
   <div class='title'>Debug</div>
-  <div ng-show="open">
+  <div>
     <div class='section'>
       <div class='name'>Viewport</div>
       <div class='field half'>

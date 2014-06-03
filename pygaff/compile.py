@@ -182,14 +182,83 @@ class WorldCompiler (object):
                 interaction.linkedCharacter = params.gettext('linked-character')
                 
                 # Compile action mappings
-                paramActionMap = params.get('action-talk')
-                if not paramActionMap:
-                    self.log.warning ('Scene interaction with tooltip %s has no action map.' % interaction.tooltip)
-                else:
-                    interaction.actions['Talk'] = self.compile_action_map (paramActionMap)
+                paramActionMapTalk = params.get('action-talk')
+                paramActionMapUse = params.get('action-use')
+                if paramActionMapTalk:
+                    interaction.actionMappings['Talk'] = self.compile_action_map (paramActionMapTalk)
+                if paramActionMapUse:
+                    interaction.actionMappings['Use'] = self.compile_action_map (paramActionMapUse)
+                if not (paramActionMapTalk or paramActionMapUse):
+                    self.log.warning ('Scene interaction with tooltip %s has no action maps.' % interaction.tooltip)
+
+                paramActions = params.get('actions')
+                if paramActions:
+                    paramActionsTemplates = paramActions.filter_templates(recursive=False)
+                    if not len(paramActionsTemplates) == 1:
+                        self.log.warning ('Expected 1 template in SceneInteractions.actions, got %i. Skipping.' % len(paramActionsTemplates))
+                    else:
+                        actionsTemplate = paramActionsTemplates[0]
+                        if not actionsTemplate.name.strip() == 'Actions':
+                            self.log.warning ('SceneInteractions.actions parameter does not contain an Actions template. Skipping')
+                        actions = self.compile_actions (actionsTemplate)
+                        interaction.actions = actions
 
                 scene.interactions.append (interaction)
         return scene
+
+    def compile_actions (self, actionsTemplate):
+        '''Compile an Actions map from an Actions template.
+
+        Arguments
+         actionsTemplate -- Source for an Actions template.
+        '''
+
+        actions = {}
+        for param in actionsTemplate.params:
+            actionName = param.name.strip()
+            paramTemplates = param.value.filter_templates (recursive=False)
+            if not len(paramTemplates) == 1:
+                self.log.warning ('Expected 1 template in Actions parameter value, got %i. Skipping.' % len(paramTemplates))
+                continue
+            actionTemplate = paramTemplates[0]
+            if not actionTemplate.name.strip() == 'Action':
+                self.log.warning ('Actions parameter value does not contain an Action template. Skipping.')
+                continue
+            action = self.compile_action (actionTemplate)
+            actions[actionName] = action
+        return actions
+
+    def compile_action (self, actionTemplate):
+        '''Compile an action definition from an Action template.
+
+        An Action template contains a list of command templates.
+
+        Arguments
+         actionTemplate -- Source for an Action template.
+        '''
+
+        action = pygaff.world.Action()
+
+        for param in actionTemplate.params:
+            paramTemplates = param.value.filter_templates (recursive=False)
+            if not len(paramTemplates) == 1:
+                self.log.warning ('Expected 1 template in Action parameter, got %i. Skipping.' % len(paramTemplates))
+                continue
+            cmdTemplate = paramTemplates[0]
+            cmd = None
+            cmdTemplateName = cmdTemplate.name.strip()
+            if cmdTemplateName == 'Narrate':
+                cmd = pygaff.world.CommandNarrate()
+                cmd.content = cmdTemplate.get(1).strip()
+            elif cmdTemplateName == 'MoveTo':
+                cmd = pygaff.world.CommandMoveTo()
+                cmd.destination = cmdTemplate.get(1).strip()
+            else:
+                self.log.warning ('Unknown Action command "%s" in command template list. Skipping.' % cmdTemplateName)
+                continue
+            action.commands.append (cmd)
+
+        return action
 
     def compile_action_map (self, source):
         '''Construct a list of ActionMappings from an ActionMap wiki template.

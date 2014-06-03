@@ -129,7 +129,20 @@ class WorldJSONExporter (object):
                 'flag': line.flag,
             }
         raise TypeError ('Lines must be of Dialogue event type, not %s' % type(line))
-                            
+    
+    def export_command (self, command):
+        if isinstance(command, pygaff.world.CommandNarrate):
+            return {
+                'event': 'narrate',
+                'content': command.content
+            }
+        elif isinstance(command, pygaff.world.CommandMoveTo):
+            return {
+                'event': 'moveto',
+                'destination': command.destination,
+            }
+        raise TypeError ('Unknown type for command: %s' % type(command))
+ 
     def to_obj (self):
         world = self.world
         obj = {
@@ -153,11 +166,14 @@ class WorldJSONExporter (object):
                     'linkedCharacter': interaction.linkedCharacter,
                     'defaultAction': interaction.defaultAction,
                     'overlayImage': interaction.overlayImage,
-                    'actions': {actionType: [{
+                    'actionMappings': {actionType: [{
                             'condition': actionMapping.condition,
                             'action': actionMapping.action,
                         } for actionMapping in actionMappings
-                    ] for (actionType, actionMappings) in interaction.actions.items()},
+                    ] for (actionType, actionMappings) in interaction.actionMappings.items()},
+                    'actions': {actionName: 
+                        [self.export_command(command) for command in action.commands]
+                    for (actionName, action) in interaction.actions.items()},
                 } for interaction in scene.interactions]
             } for scene in world.scenes],
             'characters': {character.name: {
