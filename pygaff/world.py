@@ -62,6 +62,7 @@ class Scene (object):
         self.mapRegion = None
         self.bgImage = None
         self.bgSize = None
+        self.indoors = None
         self.interactions = []
 
 class SceneInteraction (object):
@@ -74,6 +75,13 @@ class SceneInteraction (object):
         self.overlayImage = None
         self.actionMappings = {}
         self.actions = {}
+        self.states = {}
+
+class InteractionState (object):
+    def __init__ (self):
+        self.tooltip = None
+        self.image = None
+        self.region = None
 
 class ActionMapping (object):
     def __init__ (self):

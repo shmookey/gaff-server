@@ -148,6 +148,7 @@ class WorldCompiler (object):
                         int(params.gettext('bg-width')),
                         int(params.gettext('bg-height')),
                     ]
+                    scene.indoors = params.gettext('indoors','no') == 'yes'
                 if params.gettext('mapped') == 'yes':
                     scene.mapRegion = [
                         int(params.gettext('map-x')),
@@ -184,27 +185,93 @@ class WorldCompiler (object):
                 # Compile action mappings
                 paramActionMapTalk = params.get('action-talk')
                 paramActionMapUse = params.get('action-use')
+                paramActionMapInspect = params.get('action-inspect')
                 if paramActionMapTalk:
                     interaction.actionMappings['Talk'] = self.compile_action_map (paramActionMapTalk)
                 if paramActionMapUse:
                     interaction.actionMappings['Use'] = self.compile_action_map (paramActionMapUse)
-                if not (paramActionMapTalk or paramActionMapUse):
+                if paramActionMapInspect:
+                    interaction.actionMappings['Inspect'] = self.compile_action_map (paramActionMapInspect)
+                if not (paramActionMapTalk or paramActionMapUse or paramActionMapInspect):
                     self.log.warning ('Scene interaction with tooltip %s has no action maps.' % interaction.tooltip)
 
                 paramActions = params.get('actions')
                 if paramActions:
                     paramActionsTemplates = paramActions.filter_templates(recursive=False)
                     if not len(paramActionsTemplates) == 1:
-                        self.log.warning ('Expected 1 template in SceneInteractions.actions, got %i. Skipping.' % len(paramActionsTemplates))
+                        self.log.warning ('Skipping SceneInteraction.actions parameter: expected 1 template, got %i.' % len(paramActionsTemplates))
                     else:
                         actionsTemplate = paramActionsTemplates[0]
                         if not actionsTemplate.name.strip() == 'Actions':
-                            self.log.warning ('SceneInteractions.actions parameter does not contain an Actions template. Skipping')
+                            self.log.warning ('Skipping SceneInteraction.actions parameter: does not contain an Actions template.')
                         actions = self.compile_actions (actionsTemplate)
                         interaction.actions = actions
 
+                paramStates = params.get('states')
+                if paramStates:
+                    paramStatesTemplates = paramStates.filter_templates(recursive=False)
+                    if not len(paramStatesTemplates) == 1:
+                        self.log.warning ('Skipping SceneInteraction.states: expected 1 template in parameter, got %i.' % len(paramStatesTemplates) )
+                    else:
+                        statesTemplate = paramStatesTemplates[0]
+                        if not statesTemplate.name.strip() == 'States':
+                            self.log.warning ('Skipping SceneInteraction.states: parameter does not contain a States template.')
+                        else:
+                            states = self.compile_interaction_states (statesTemplate, imageRefs)
+                            interaction.states = states
+                else:
+                    self.log.warning ('Interaction with tooltip %s contains no states.' % interaction.tooltip)
+
                 scene.interactions.append (interaction)
         return scene
+
+    def compile_interaction_states (self, statesTemplate, imageRefs):
+        '''Compile a dict of names to InteractionStates from a States template.
+
+        Arguments:
+         statesTemplate -- Source for a States template.
+         imageRefs -- Dict of image references in compile job.
+        '''
+
+        states = {}
+        for param in statesTemplate.params:
+            paramName = param.name.strip()
+            paramValue = param.value
+            paramTemplates = paramValue.filter_templates(recursive=False)
+            if not len(paramTemplates) == 1:
+                self.log ('Skipping State parameter %s: expected 1 template in value, got %i.' % (paramName, len(paramTemplates)))
+                continue
+            stateTemplate = paramTemplates[0]
+            stateTemplateName = stateTemplate.name.strip()
+            if not stateTemplateName == 'State':
+                self.log ('Skipping State parameter %s: parameter does not contain a State template.')
+                continue
+            state = self.compile_interaction_state (stateTemplate, imageRefs)
+            states[paramName] = state
+        return states
+
+    def compile_interaction_state (self, stateTemplate, imageRefs):
+        '''Compile an InteractionState from a State template.
+
+        Arguments
+         stateTemplate -- Source for a State template.
+        '''
+
+        state = pygaff.world.InteractionState()
+        state.tooltip = stateTemplate.get('tooltip').value.strip()
+        state.image = stateTemplate.get('image').value.strip()
+        if state.image and not state.image in imageRefs:
+            imageRefs[state.image] = None
+        try:
+            state.region = [
+                int(stateTemplate.get('left').value.strip()),
+                int(stateTemplate.get('top').value.strip()),
+                int(stateTemplate.get('right').value.strip())-int(stateTemplate.get('left').value.strip()),
+                int(stateTemplate.get('bottom').value.strip())-int(stateTemplate.get('top').value.strip())
+            ]
+        except:
+            self.log.error ('Could not extract interaction state region.')
+        return state
 
     def compile_actions (self, actionsTemplate):
         '''Compile an Actions map from an Actions template.

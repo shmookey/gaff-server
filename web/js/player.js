@@ -1,4 +1,4 @@
-game.service ('Player', ['Scene', function(Scene) {
+game.service ('Player', ['Scene', 'World', function(Scene, World) {
     var self = this;
     var reTokens = new RegExp (/[^ &|()!]+/g);
 
@@ -6,8 +6,14 @@ game.service ('Player', ['Scene', function(Scene) {
     this.progressFlags = [];
 
     this.goToScene = function (scene) {
-        /* Go to the specified scene. */
+        /* Go to the specified scene.
+        
+        Arguments
+         scene -- A scene object or the name of a scene.
+         */
 
+        if (scene.substr) 
+            scene = World.data.scenes[scene];
         self.scene = scene;
         Scene.set (scene);
     };

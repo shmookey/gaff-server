@@ -154,11 +154,12 @@ class WorldJSONExporter (object):
             'zoomMax': world.zoomMax,
             'viewportRestricted': world.viewportRestricted,
             'imageRefs': world.imageRefs,
-            'scenes': [{
+            'scenes': {scene.name: {
                 'name': scene.name,
                 'mapRegion': scene.mapRegion,
                 'bgImage': scene.bgImage,
                 'bgSize': scene.bgSize,
+                'indoors': scene.indoors,
                 'interactions': [{
                     'region': interaction.region,
                     'tooltip': interaction.tooltip,
@@ -174,8 +175,13 @@ class WorldJSONExporter (object):
                     'actions': {actionName: 
                         [self.export_command(command) for command in action.commands]
                     for (actionName, action) in interaction.actions.items()},
+                    'states': {stateName: {
+                        'tooltip': state.tooltip,
+                        'image': state.image,
+                        'region': state.region,
+                    } for (stateName, state) in interaction.states.items()},
                 } for interaction in scene.interactions]
-            } for scene in world.scenes],
+            } for scene in world.scenes},
             'characters': {character.name: {
                 'name': character.name,
                 'tooltip': character.tooltip,

@@ -1,9 +1,10 @@
 <div class="scene" ng-class="{visible:visible}">
-  <div class="background" ng-click="dismiss()"></div>
+  <div class="background" ng-click="dismiss()" ng-class="{indoors:indoors}"></div>
   <div class="frame" ng-style="imageStyle" ng-mousemove="onMouseMove($event)">
     <div ng-repeat="interaction in interactions">
       <scene-interaction ng-model="interaction"></scene-interaction>
     </div>
     <dialogue></dialogue>
+    <div class="narration" ng-show="narration">{{ narration }}</div>
   </div>
 </div>

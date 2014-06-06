@@ -1,4 +1,5 @@
-game.service ('SceneInteraction', ['Player', 'Character', 'Dialogue', 'ItemInspector', function(Player, Character, Dialogue, ItemInspector) {
+game.service ('SceneInteraction', ['$timeout', 'Player', 'Character', 'Dialogue', 'ItemInspector', 'Scene',
+  function($timeout, Player, Character, Dialogue, ItemInspector, Scene) {
     function RunAction (action) {
         for (var i=0; i<action.length; i++) {
             var command = action[i];
@@ -10,11 +11,14 @@ game.service ('SceneInteraction', ['Player', 'Character', 'Dialogue', 'ItemInspe
     }
 
     function Narrate (content) {
-        
+        Scene.narration = content;
+        $timeout(function() {
+            Scene.narration = null;
+        }, 2000);
     }
 
     function MoveTo (destination) {
-
+        Player.goToScene (destination);
     }
 
     this.activate = function (interaction) {
@@ -32,7 +36,7 @@ game.service ('SceneInteraction', ['Player', 'Character', 'Dialogue', 'ItemInspe
                 Dialogue.beginDialogue (character, dialogueName, interaction);
             } else {
                 // Other action types are considered generic
-                var action = interaction.actions[actionName];
+                var action = interaction.actions[mapping.action];
                 RunAction(action);
             }
             return;

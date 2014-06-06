@@ -1,11 +1,14 @@
 game.service ('Scene', [function () {
     var self = this;
+    var narrationTimeout = null;
 
     this.name = null;
     this.interactions = null;
     this.bgImage = null;
     this.bgSize = null;
-    this.config = null;  // Ref to source data
+    this.config = null;    // Ref to source data
+    this.narration = null; // Narrative text on-screen
+    this.indoors = null;   // Is the scene indoors (no quick escape to map)
 
     this.active = false;
 
@@ -16,6 +19,10 @@ game.service ('Scene', [function () {
         self.bgImage = scene.bgImage;
         self.bgSize = scene.bgSize;
         self.active = true;
+        self.narration = null;
+        self.indoors = scene.indoors;
+        if (self.narrationTimeout) self.narrationTimeout();
+        self.narrationTimeout = null;
     };
 
     this.clear = function () {
@@ -25,7 +32,18 @@ game.service ('Scene', [function () {
         self.bgImage = null;
         self.bgSize = null;
         self.active = false;
-    }
+        self.narration = null;
+        self.indoors = null;
+        if (self.narrationTimeout) self.narrationTimeout();
+        self.narrationTimeout = null;
+    };
+
+    this.narrate = function (content) {
+        self.narration = content;
+        narrationTimeout = $timeout(function() {
+            self.narration = null;
+        }, 2000);
+    };
 
     return this;
 }]);
@@ -36,6 +54,8 @@ game.directive ('scene', function () {
         $scope.visible = false;
         $scope.imageStyle = null;
         $scope.interactions = null;
+        $scope.narrative = null;
+        $scope.indoors = false;
 
         $scope.$watch (function(){return Scene.name;}, function(name) {
             if (Scene.active) {
@@ -49,10 +69,16 @@ game.directive ('scene', function () {
                     'margin-top': (-Scene.bgSize[1]/2) + 'px',
                 };
                 $scope.interactions = Scene.interactions;
+                if (Scene.indoors) $scope.indoors = true;
+                else $scope.indoors = false;
             } else {
                 $scope.visible = false;
                 $scope.imageStyle = null;
             }
+        });
+
+        $scope.$watch (function(){return Scene.narration;}, function(narration) {
+            $scope.narration = narration;
         });
 
         $scope.dismiss = function () {

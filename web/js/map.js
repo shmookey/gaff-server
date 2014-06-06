@@ -39,7 +39,10 @@ game.service ('WorldMap', ['$document', 'World', function($document, World) {
         self.screenViewport.x2 = self.mapViewport.x2 / self.zoomScale;
         self.screenViewport.y2 = self.mapViewport.y2 / self.zoomScale;
         self.viewportRestricted = map.viewportRestricted;
-        self.locations = map.scenes;
+        self.locations = [];
+        angular.forEach (map.scenes, function (scene) {
+            if (scene.mapRegion) self.locations.push (scene);
+        });
         self.updateLocations ();
     };
 
@@ -80,15 +83,15 @@ game.service ('WorldMap', ['$document', 'World', function($document, World) {
     this.updateLocations = function () {
         var scale = self.zoomScale;
         var viewport = self.mapViewport;
-        for (var i=0; i<self.locations.length; i++) {
-            var loc = self.locations[i];
-            loc.screenRegion = [
-                (loc.mapRegion[0] - viewport.x1) * scale,
-                (loc.mapRegion[1] - viewport.y1) * scale,
-                loc.mapRegion[2] * scale,
-                loc.mapRegion[3] * scale,
-            ];
-        }
+        angular.forEach (self.locations, function(loc) {
+            if (loc.mapRegion)
+                loc.screenRegion = [
+                    (loc.mapRegion[0] - viewport.x1) * scale,
+                    (loc.mapRegion[1] - viewport.y1) * scale,
+                    loc.mapRegion[2] * scale,
+                    loc.mapRegion[3] * scale,
+                ];
+        });
     };
 
     return this;
