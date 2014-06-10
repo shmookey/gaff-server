@@ -3,7 +3,7 @@
 
 import requests
 
-import pygaff.log
+import gaff.log
 
 class WikiAPI (object):
     def __init__ (self, uri, username, password, log=None):
@@ -12,7 +12,7 @@ class WikiAPI (object):
         self.uri = uri
         self.session = requests.Session()
         if log: self.log = log
-        else: self.log = pygaff.log.EventLogger()
+        else: self.log = gaff.log.EventLogger()
 
     def login (self):
         params = {

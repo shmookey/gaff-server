@@ -1,8 +1,8 @@
-from pygaff.conf import API_URI, API_USERNAME, API_PASSWORD
-import pygaff.compile
-import pygaff.exporter
-import pygaff.log
-import pygaff.api
+from gaff.conf import API_URI, API_USERNAME, API_PASSWORD
+import gaff.compile
+import gaff.exporter
+import gaff.log
+import gaff.api
 
 from flask import Flask, Response
 app = Flask(__name__)
@@ -15,25 +15,25 @@ def hello():
 
 @app.route("/world")
 def world():
-    api = pygaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD)
+    api = gaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD)
     api.login()
-    logger = pygaff.log.EventLogger(info=[],error=[],warning=[])
-    compiler = pygaff.compile.WorldCompiler (api, log=logger)
+    logger = gaff.log.EventLogger(info=[],error=[],warning=[])
+    compiler = gaff.compile.WorldCompiler (api, log=logger)
     world = compiler.compile()
-    exporter = pygaff.api.WorldJSONExporter (world)
+    exporter = gaff.exporter.WorldJSONExporter (world)
     return Response(exporter.to_string(),mimetype='application/json')
 
 @app.route("/compile")
 def compile():
-    logger = pygaff.log.EventLogger(info=[],error=[],warning=[])
+    logger = gaff.log.EventLogger(info=[],error=[],warning=[])
     logger.info ('Processing compile request.')
     compiler_output = ""
     try:
-        api = pygaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD, log=logger)
+        api = gaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD, log=logger)
         api.login()
-        compiler = pygaff.compile.WorldCompiler (api, log=logger)
+        compiler = gaff.compile.WorldCompiler (api, log=logger)
         world = compiler.compile()
-        exporter = pygaff.exporter.WorldJSONExporter (world)
+        exporter = gaff.exporter.WorldJSONExporter (world)
         logger.info ('Compile request completed successfully.')
         compiler_output = exporter.to_string()
     except Exception as e:

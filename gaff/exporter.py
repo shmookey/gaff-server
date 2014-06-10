@@ -2,8 +2,8 @@
 
 import json
 
-import pygaff.world
-import pygaff.log
+import gaff.world
+import gaff.log
 
 class WorldJSONExporter (object):
     def __init__ (self, world):
@@ -17,13 +17,13 @@ class WorldJSONExporter (object):
         }
 
     def export_dialogue_line (self, line):
-        if isinstance(line, pygaff.world.DialogueLine):
+        if isinstance(line, gaff.world.DialogueLine):
             return {
                 'event': 'line',
                 'speaker': line.speaker,
                 'content': line.content,
             }
-        elif isinstance(line, pygaff.world.DialoguePrompt):
+        elif isinstance(line, gaff.world.DialoguePrompt):
             return {
                 'event': 'prompt',
                 'name': line.name,
@@ -33,12 +33,12 @@ class WorldJSONExporter (object):
                     'result': [self.export_dialogue_line(line) for line in option.result],
                 } for option in line.options],
             }
-        elif isinstance(line, pygaff.world.DialogueJump):
+        elif isinstance(line, gaff.world.DialogueJump):
             return {
                 'event': 'jump',
                 'target': line.target,
             }
-        elif isinstance(line, pygaff.world.CommandGrant):
+        elif isinstance(line, gaff.world.CommandGrant):
             return {
                 'event': 'grant',
                 'flag': line.flag,
@@ -46,22 +46,22 @@ class WorldJSONExporter (object):
         raise TypeError ('Lines must be of Dialogue event type, not %s' % type(line))
     
     def export_command (self, command):
-        if isinstance(command, pygaff.world.CommandNarrate):
+        if isinstance(command, gaff.world.CommandNarrate):
             return {
                 'event': 'narrate',
                 'content': command.content
             }
-        elif isinstance(command, pygaff.world.CommandMoveTo):
+        elif isinstance(command, gaff.world.CommandMoveTo):
             return {
                 'event': 'moveto',
                 'destination': command.destination,
             }
-        elif isinstance(command, pygaff.world.CommandGrant):
+        elif isinstance(command, gaff.world.CommandGrant):
             return {
                 'event': 'grant',
                 'flag': command.flag,
             }
-        elif isinstance(command, pygaff.world.CommandTake):
+        elif isinstance(command, gaff.world.CommandTake):
             return {
                 'event': 'take',
                 'item': command.item,
@@ -122,7 +122,6 @@ class WorldJSONExporter (object):
                 'name': item.name,
                 'inventoryTooltip': item.inventoryTooltip,
                 'inventoryIcon': item.inventoryIcon,
-                'examineImage': item.examineImage,
             } for item in world.items],
         }
         return obj

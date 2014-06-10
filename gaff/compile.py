@@ -2,8 +2,8 @@
 
 import mwparserfromhell as parser
 
-import pygaff.world
-import pygaff.log
+import gaff.world
+import gaff.log
 
 import sys
 from datetime import datetime
@@ -23,11 +23,11 @@ class WorldCompiler (object):
     def __init__ (self, api, log=None):
         self.api = api
         if log: self.log = log
-        else: self.log = pygaff.log.EventLogger()
+        else: self.log = gaff.log.EventLogger()
 
     def compile (self):
         self.log.info ('Starting compile.')
-        world = pygaff.world.World ()
+        world = gaff.world.World ()
         imageRefs = {}
 
         world_dump = self.api.get_page_content ('The_World')
@@ -110,7 +110,7 @@ class WorldCompiler (object):
 
     def compile_character (self, title, source, imageRefs):
         self.log.info ('Processing character: %s' % title)
-        character = pygaff.world.Character()
+        character = gaff.world.Character()
         for obj_name, params in source:
             if obj_name == 'Infobox Character':
                 character.name = params.gettext('name')
@@ -126,7 +126,7 @@ class WorldCompiler (object):
 
     def compile_item (self, title, source, imageRefs):
         self.log.info ('Processing item: %s' % title)
-        item = pygaff.world.Item()
+        item = gaff.world.Item()
         for obj_name, params in source:
             if obj_name == 'Infobox Item':
                 item.name = params.gettext('name')
@@ -138,7 +138,7 @@ class WorldCompiler (object):
 
     def compile_scene (self, title, source, imageRefs):
         self.log.info ('Processing scene: %s' % title)
-        scene = pygaff.world.Scene ()
+        scene = gaff.world.Scene ()
         for obj_name, params in source:
             if obj_name == 'Infobox Scene':
                 scene.name = params.gettext('name')
@@ -161,7 +161,7 @@ class WorldCompiler (object):
                     scene.tooltip = params.gettext ('tooltip', scene.name)
 
             elif obj_name == 'Scene Interaction':
-                interaction = pygaff.world.SceneInteraction ()
+                interaction = gaff.world.SceneInteraction ()
 
                 # Extract general metadata
                 interaction.overlayImage = params.gettext('overlay-image')
@@ -257,7 +257,7 @@ class WorldCompiler (object):
          stateTemplate -- Source for a State template.
         '''
 
-        state = pygaff.world.InteractionState()
+        state = gaff.world.InteractionState()
         state.name = stateName
         params = TemplateDict.from_template(stateTemplate)
         state.condition = params.gettext('condition')
@@ -312,7 +312,7 @@ class WorldCompiler (object):
          actionTemplate -- Source for an Action template.
         '''
 
-        action = pygaff.world.Action()
+        action = gaff.world.Action()
 
         for param in actionTemplate.params:
             paramTemplates = param.value.filter_templates (recursive=False)
@@ -323,16 +323,16 @@ class WorldCompiler (object):
             cmd = None
             cmdTemplateName = cmdTemplate.name.strip()
             if cmdTemplateName == 'Narrate':
-                cmd = pygaff.world.CommandNarrate()
+                cmd = gaff.world.CommandNarrate()
                 cmd.content = cmdTemplate.get(1).strip()
             elif cmdTemplateName == 'MoveTo':
-                cmd = pygaff.world.CommandMoveTo()
+                cmd = gaff.world.CommandMoveTo()
                 cmd.destination = cmdTemplate.get(1).strip()
             elif cmdTemplateName == 'Grant':
-                cmd = pygaff.world.CommandGrant()
+                cmd = gaff.world.CommandGrant()
                 cmd.flag = cmdTemplate.get(1).strip()
             elif cmdTemplateName == 'Take':
-                cmd = pygaff.world.CommandTake()
+                cmd = gaff.world.CommandTake()
                 cmd.item = cmdTemplate.get(1).strip()
             else:
                 self.log.warning ('Unknown Action command "%s" in command template list. Skipping.' % cmdTemplateName)
@@ -389,7 +389,7 @@ class WorldCompiler (object):
 
             if catchallExists:
                 nInaccessible += 1
-            action = pygaff.world.ActionMapping ()
+            action = gaff.world.ActionMapping ()
             action.condition = tmpl_when.get(1).strip()
             if not action.condition:
                 catchallExists = True
@@ -405,7 +405,7 @@ class WorldCompiler (object):
     def compile_dialogue (self, source):
         '''Construct a Dialogue object from a Dialogue wiki template.'''
 
-        dialogue = pygaff.world.Dialogue ()
+        dialogue = gaff.world.Dialogue ()
         dialogue.name = source.gettext ('name')
         lines_source = source.get('lines').filter_templates(recursive=False)[0]
         dialogue.lines = self.compile_dialogue_lines (lines_source)
@@ -445,7 +445,7 @@ class WorldCompiler (object):
             raise ValueError ('Expected "Line" template, got %s' % name)
         if not len(source.params) == 2:
             raise ValueError ('Line template must have 2 arguments, got %i' % len(source.params))
-        line = pygaff.world.DialogueLine()
+        line = gaff.world.DialogueLine()
         line.speaker = source.get(1).strip()
         line.content = source.get(2).strip()
         return line
@@ -458,7 +458,7 @@ class WorldCompiler (object):
             raise ValueError ('Expected "Jump" template, got %s' % name)
         if not len(source.params) == 1:
             raise ValueError ('Jump template must have exactly 1 argument, got %i' % len(source.params))
-        jump = pygaff.world.DialogueJump()
+        jump = gaff.world.DialogueJump()
         jump.target = source.get(1).strip()
         return jump
 
@@ -470,7 +470,7 @@ class WorldCompiler (object):
             raise ValueError ('Expected "Grant" template, got %s' % name)
         if not len(source.params) == 1:
             raise ValueError ('Grant template must have exactly 1 argument, got %i' % len(source.params))
-        grant = pygaff.world.CommandGrant()
+        grant = gaff.world.CommandGrant()
         grant.flag = source.get(1).strip()
         return grant
 
@@ -480,7 +480,7 @@ class WorldCompiler (object):
         name = source.name.strip()
         if not name == 'Prompt':
             raise ValueError ('Expected "Prompt" template, got %s' % name)
-        prompt = pygaff.world.DialoguePrompt()
+        prompt = gaff.world.DialoguePrompt()
 
         for prompt_param in source.params:
             if prompt_param.name.strip() == 'name':
@@ -494,7 +494,7 @@ class WorldCompiler (object):
             if not tmplname == 'Option':
                 raise ValueError ('Expected "Option" template, got %s' % tmplname)
 
-            option = pygaff.world.DialogueOption()
+            option = gaff.world.DialogueOption()
             opt_params = TemplateDict.from_template(tmpl)
             option.label = opt_params.gettext ('label')
             option.condition = opt_params.gettext ('condition')
