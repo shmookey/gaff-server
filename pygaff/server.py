@@ -1,5 +1,6 @@
 from pygaff.conf import API_URI, API_USERNAME, API_PASSWORD
 import pygaff.compile
+import pygaff.exporter
 import pygaff.log
 import pygaff.api
 
@@ -32,7 +33,7 @@ def compile():
         api.login()
         compiler = pygaff.compile.WorldCompiler (api, log=logger)
         world = compiler.compile()
-        exporter = pygaff.api.WorldJSONExporter (world)
+        exporter = pygaff.exporter.WorldJSONExporter (world)
         logger.info ('Compile request completed successfully.')
         compiler_output = exporter.to_string()
     except Exception as e:

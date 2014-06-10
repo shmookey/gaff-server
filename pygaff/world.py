@@ -21,6 +21,7 @@ class DialogueLine (object):
 class DialogueOption (object):
     def __init__ (self):
         self.label = None
+        self.condition = None
         self.result = []
 
 class DialoguePrompt (object):
@@ -32,9 +33,13 @@ class DialogueJump (object):
     def __init__ (self):
         self.target = None
 
-class DialogueGrant (object):
+class CommandGrant (object):
     def __init__ (self):
         self.flag = None
+
+class CommandTake (object):
+    def __init__ (self):
+        self.item = None
 
 class CommandNarrate (object):
     def __init__ (self):
@@ -54,7 +59,6 @@ class Item (object):
         self.name = None
         self.inventoryTooltip = None
         self.inventoryIcon = None
-        self.examineImage = None
 
 class Scene (object):
     def __init__ (self):
@@ -67,21 +71,24 @@ class Scene (object):
 
 class SceneInteraction (object):
     def __init__ (self):
-        self.region = None
+        self.name = None
         self.linkedItem = None
         self.linkedCharacter = None
-        self.tooltip = None
+        self.defaultState = None
         self.defaultAction = None
-        self.overlayImage = None
         self.actionMappings = {}
         self.actions = {}
-        self.states = {}
+        self.states = []
 
 class InteractionState (object):
     def __init__ (self):
+        self.name = None
         self.tooltip = None
         self.image = None
         self.region = None
+        self.condition = None
+        self.enabled = None
+        self.visible = None
 
 class ActionMapping (object):
     def __init__ (self):

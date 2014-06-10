@@ -9,10 +9,15 @@ import sys
 from datetime import datetime
 import traceback
 
-class CustomDict (dict): 
+class TemplateDict (dict): 
     def gettext (self, k, d = None):
         if k in self: return self[k].strip()
         return d
+
+    @classmethod
+    def from_template (self, template):
+        return TemplateDict({p.name.strip():p.value for p in template.params})
+
 
 class WorldCompiler (object):
     def __init__ (self, api, log=None):
@@ -129,9 +134,6 @@ class WorldCompiler (object):
                 item.inventoryIcon = params.gettext('inventory-icon')
                 if item.inventoryIcon and not item.inventoryIcon in imageRefs:
                     imageRefs[item.inventoryIcon] = None
-                item.examineImage = params.gettext('examine-image')
-                if item.examineImage and not item.examineImage in imageRefs:
-                    imageRefs[item.examineImage] = None
         return item
 
     def compile_scene (self, title, source, imageRefs):
@@ -161,49 +163,41 @@ class WorldCompiler (object):
             elif obj_name == 'Scene Interaction':
                 interaction = pygaff.world.SceneInteraction ()
 
-                # Determine interaction region
-                # Regions are specified as edge positions
-                try:
-                    interaction.region = [
-                        int(params.gettext('left')),
-                        int(params.gettext('top')),
-                        int(params.gettext('right'))-int(params.gettext('left')),
-                        int(params.gettext('bottom'))-int(params.gettext('top'))
-                    ]
-                except:
-                    self.log.error ('Could not extract interaction region.')
-
                 # Extract general metadata
                 interaction.overlayImage = params.gettext('overlay-image')
                 if interaction.overlayImage and not interaction.overlayImage in imageRefs:
                     imageRefs[interaction.overlayImage] = None
-                interaction.tooltip = params.gettext('tooltip')
+                interaction.name = params.gettext('name')
                 interaction.linkedItem = params.gettext('linked-item')
-                interaction.defaultAction = params.gettext('default-action')
                 interaction.linkedCharacter = params.gettext('linked-character')
+                interaction.defaultAction = params.gettext('default-action')
+                interaction.defaultState = params.gettext('default-state')
                 
                 # Compile action mappings
                 paramActionMapTalk = params.get('action-talk')
+                paramActionMapTake = params.get('action-take')
                 paramActionMapUse = params.get('action-use')
                 paramActionMapInspect = params.get('action-inspect')
                 if paramActionMapTalk:
                     interaction.actionMappings['Talk'] = self.compile_action_map (paramActionMapTalk)
+                if paramActionMapTake:
+                    interaction.actionMappings['Take'] = self.compile_action_map (paramActionMapTake)
                 if paramActionMapUse:
                     interaction.actionMappings['Use'] = self.compile_action_map (paramActionMapUse)
                 if paramActionMapInspect:
                     interaction.actionMappings['Inspect'] = self.compile_action_map (paramActionMapInspect)
-                if not (paramActionMapTalk or paramActionMapUse or paramActionMapInspect):
-                    self.log.warning ('Scene interaction with tooltip %s has no action maps.' % interaction.tooltip)
+                if not (paramActionMapTalk or paramActionMapUse or paramActionMapInspect or paramActionMapTake):
+                    self.log.warning ('Scene interaction %s has no action maps.' % interaction.name)
 
                 paramActions = params.get('actions')
                 if paramActions:
                     paramActionsTemplates = paramActions.filter_templates(recursive=False)
                     if not len(paramActionsTemplates) == 1:
-                        self.log.warning ('Skipping SceneInteraction.actions parameter: expected 1 template, got %i.' % len(paramActionsTemplates))
+                        self.log.warning ('Skipping SceneInteraction[%s].actions parameter: expected 1 template, got %i.' % (interaction.name,len(paramActionsTemplates)))
                     else:
                         actionsTemplate = paramActionsTemplates[0]
                         if not actionsTemplate.name.strip() == 'Actions':
-                            self.log.warning ('Skipping SceneInteraction.actions parameter: does not contain an Actions template.')
+                            self.log.warning ('Skipping SceneInteraction[%s].actions parameter: does not contain an Actions template.' % interaction.name)
                         actions = self.compile_actions (actionsTemplate)
                         interaction.actions = actions
 
@@ -211,16 +205,16 @@ class WorldCompiler (object):
                 if paramStates:
                     paramStatesTemplates = paramStates.filter_templates(recursive=False)
                     if not len(paramStatesTemplates) == 1:
-                        self.log.warning ('Skipping SceneInteraction.states: expected 1 template in parameter, got %i.' % len(paramStatesTemplates) )
+                        self.log.warning ('Skipping SceneInteraction[%s].states: expected 1 template in parameter, got %i.' % (interaction.name,len(paramStatesTemplates)) )
                     else:
                         statesTemplate = paramStatesTemplates[0]
                         if not statesTemplate.name.strip() == 'States':
-                            self.log.warning ('Skipping SceneInteraction.states: parameter does not contain a States template.')
+                            self.log.warning ('Skipping SceneInteraction[%s].states: parameter does not contain a States template.' % interaction.name)
                         else:
                             states = self.compile_interaction_states (statesTemplate, imageRefs)
                             interaction.states = states
                 else:
-                    self.log.warning ('Interaction with tooltip %s contains no states.' % interaction.tooltip)
+                    self.log.error ('SceneInteraction[%s] contains no states.' % interaction.tooltip)
 
                 scene.interactions.append (interaction)
         return scene
@@ -233,24 +227,30 @@ class WorldCompiler (object):
          imageRefs -- Dict of image references in compile job.
         '''
 
-        states = {}
+        states = []
+        catchallExists = False
+        nInaccessible = 0
         for param in statesTemplate.params:
             paramName = param.name.strip()
             paramValue = param.value
             paramTemplates = paramValue.filter_templates(recursive=False)
             if not len(paramTemplates) == 1:
-                self.log ('Skipping State parameter %s: expected 1 template in value, got %i.' % (paramName, len(paramTemplates)))
+                self.log.error ('Skipping State parameter %s: expected 1 template in value, got %i.' % (paramName, len(paramTemplates)))
                 continue
             stateTemplate = paramTemplates[0]
             stateTemplateName = stateTemplate.name.strip()
             if not stateTemplateName == 'State':
-                self.log ('Skipping State parameter %s: parameter does not contain a State template.')
+                self.log.error ('Skipping State parameter %s: parameter does not contain a State template.')
                 continue
-            state = self.compile_interaction_state (stateTemplate, imageRefs)
-            states[paramName] = state
+            if catchallExists: nInaccessible += 1
+            state = self.compile_interaction_state (stateTemplate, paramName, imageRefs)
+            if not state.condition: catchallExists = True
+            states.append (state)
+        if nInaccessible:
+            self.log.warning ('%i states are inaccessible due to an earlier catchall state.' % nInaccessible)
         return states
 
-    def compile_interaction_state (self, stateTemplate, imageRefs):
+    def compile_interaction_state (self, stateTemplate, stateName, imageRefs):
         '''Compile an InteractionState from a State template.
 
         Arguments
@@ -258,19 +258,27 @@ class WorldCompiler (object):
         '''
 
         state = pygaff.world.InteractionState()
-        state.tooltip = stateTemplate.get('tooltip').value.strip()
-        state.image = stateTemplate.get('image').value.strip()
+        state.name = stateName
+        params = TemplateDict.from_template(stateTemplate)
+        state.condition = params.gettext('condition')
+        state.tooltip = params.gettext('tooltip')
+        state.enabled = params.gettext('enabled') == 'yes'
+        state.visible = params.gettext('visible') == 'yes'
+        state.image = params.gettext('image')
         if state.image and not state.image in imageRefs:
             imageRefs[state.image] = None
         try:
+            # Determine interaction region
+            # Regions are specified as edge positions
             state.region = [
-                int(stateTemplate.get('left').value.strip()),
-                int(stateTemplate.get('top').value.strip()),
-                int(stateTemplate.get('right').value.strip())-int(stateTemplate.get('left').value.strip()),
-                int(stateTemplate.get('bottom').value.strip())-int(stateTemplate.get('top').value.strip())
+                int(params.gettext('left')),
+                int(params.gettext('top')),
+                int(params.gettext('right'))-int(params.gettext('left')),
+                int(params.gettext('bottom'))-int(params.gettext('top'))
             ]
         except:
-            self.log.error ('Could not extract interaction state region.')
+            pass # Some interactions (e.g. items already taken) won't have regions
+
         return state
 
     def compile_actions (self, actionsTemplate):
@@ -320,6 +328,12 @@ class WorldCompiler (object):
             elif cmdTemplateName == 'MoveTo':
                 cmd = pygaff.world.CommandMoveTo()
                 cmd.destination = cmdTemplate.get(1).strip()
+            elif cmdTemplateName == 'Grant':
+                cmd = pygaff.world.CommandGrant()
+                cmd.flag = cmdTemplate.get(1).strip()
+            elif cmdTemplateName == 'Take':
+                cmd = pygaff.world.CommandTake()
+                cmd.item = cmdTemplate.get(1).strip()
             else:
                 self.log.warning ('Unknown Action command "%s" in command template list. Skipping.' % cmdTemplateName)
                 continue
@@ -353,6 +367,8 @@ class WorldCompiler (object):
             return []
 
         actions = []
+        nInaccessible = 0
+        catchallExists = False
         for param in template.params:
             # Ignore the 'name' parameter for now
             if param.name.strip() == 'name': continue
@@ -371,10 +387,18 @@ class WorldCompiler (object):
                 self.log.warning ('Skipping ActionMap argument containing unexpected template (expected "When", got "%s")' % tmpl_when_name)
                 continue
 
+            if catchallExists:
+                nInaccessible += 1
             action = pygaff.world.ActionMapping ()
             action.condition = tmpl_when.get(1).strip()
+            if not action.condition:
+                catchallExists = True
+                action.condition = None
             action.action = tmpl_when.get(2).strip()
             actions.append(action)
+
+        if nInaccessible:
+            self.log.warning ('%i mapped actions are inaccessible due to an earlier catchall condition.' % nInaccessible)
 
         return actions
 
@@ -439,14 +463,14 @@ class WorldCompiler (object):
         return jump
 
     def compile_dialogue_grant (self, source):
-        '''Construct a DialogueGrant from a Grant wiki template.'''
+        '''Construct a CommandGrant from a Grant wiki template.'''
 
         name = source.name.strip()
         if not name == 'Grant':
             raise ValueError ('Expected "Grant" template, got %s' % name)
         if not len(source.params) == 1:
             raise ValueError ('Grant template must have exactly 1 argument, got %i' % len(source.params))
-        grant = pygaff.world.DialogueGrant()
+        grant = pygaff.world.CommandGrant()
         grant.flag = source.get(1).strip()
         return grant
 
@@ -471,7 +495,9 @@ class WorldCompiler (object):
                 raise ValueError ('Expected "Option" template, got %s' % tmplname)
 
             option = pygaff.world.DialogueOption()
-            option.label = tmpl.get('label').value.strip()
+            opt_params = TemplateDict.from_template(tmpl)
+            option.label = opt_params.gettext ('label')
+            option.condition = opt_params.gettext ('condition')
             result = tmpl.get('result').value.filter_templates(recursive=False)[0]
             lines = self.compile_dialogue_lines (result)
             option.result = lines
@@ -485,6 +511,6 @@ class WorldCompiler (object):
         templates = code.filter_templates()
         for template in templates:
             name = template.name.strip()
-            params = CustomDict({p.name.strip():p.value for p in template.params})
+            params = TemplateDict.from_template(template)
             yield (name, params)
 
