@@ -2,6 +2,7 @@
 
 from pygaff.conf import API_URI, API_USERNAME, API_PASSWORD
 import pygaff.compile
+import pygaff.exporter
 import pygaff.api
 import pygaff.log
 
@@ -13,7 +14,7 @@ api = pygaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD)
 api.login()
 compiler = pygaff.compile.WorldCompiler (api, log=log)
 world = compiler.compile()
-exporter = pygaff.api.WorldJSONExporter (world)
+exporter = pygaff.exporter.WorldJSONExporter (world)
 
 if '-p' in sys.argv:
     print exporter.to_string()
