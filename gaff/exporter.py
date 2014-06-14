@@ -95,6 +95,9 @@ class WorldJSONExporter (object):
                     'actionMappings': {actionType: [{
                             'condition': actionMapping.condition,
                             'action': actionMapping.action,
+                            'item': actionMapping.item,
+                            'verb': actionMapping.verb,
+                            'connective': actionMapping.connective,
                         } for actionMapping in actionMappings
                     ] for (actionType, actionMappings) in interaction.actionMappings.items()},
                     'actions': {actionName: 
@@ -118,11 +121,11 @@ class WorldJSONExporter (object):
                 'speechColor': character.speechColor,
                 'dialogues': {dialogue.name: self.export_dialogue(dialogue) for dialogue in character.dialogues},
             } for character in world.characters},
-            'items': [{
+            'items': {item.name: {
                 'name': item.name,
                 'inventoryTooltip': item.inventoryTooltip,
                 'inventoryIcon': item.inventoryIcon,
-            } for item in world.items],
+            } for item in world.items},
         }
         return obj
 

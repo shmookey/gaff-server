@@ -174,19 +174,22 @@ class WorldCompiler (object):
                 interaction.defaultState = params.gettext('default-state')
                 
                 # Compile action mappings
-                paramActionMapTalk = params.get('action-talk')
-                paramActionMapTake = params.get('action-take')
-                paramActionMapUse = params.get('action-use')
-                paramActionMapInspect = params.get('action-inspect')
-                if paramActionMapTalk:
-                    interaction.actionMappings['Talk'] = self.compile_action_map (paramActionMapTalk)
-                if paramActionMapTake:
-                    interaction.actionMappings['Take'] = self.compile_action_map (paramActionMapTake)
-                if paramActionMapUse:
-                    interaction.actionMappings['Use'] = self.compile_action_map (paramActionMapUse)
-                if paramActionMapInspect:
-                    interaction.actionMappings['Inspect'] = self.compile_action_map (paramActionMapInspect)
-                if not (paramActionMapTalk or paramActionMapUse or paramActionMapInspect or paramActionMapTake):
+                mapTalk = params.get('action-talk')
+                mapTake = params.get('action-take')
+                mapUse = params.get('action-use')
+                mapInspect = params.get('action-inspect')
+                mapApply = params.get('action-apply')
+                if mapTalk:
+                    interaction.actionMappings['Talk'] = self.compile_action_map (mapTalk)
+                if mapTake:
+                    interaction.actionMappings['Take'] = self.compile_action_map (mapTake)
+                if mapUse:
+                    interaction.actionMappings['Use'] = self.compile_action_map (mapUse)
+                if mapInspect:
+                    interaction.actionMappings['Inspect'] = self.compile_action_map (mapInspect)
+                if mapApply:
+                    interaction.actionMappings['Apply'] = self.compile_action_map (mapApply)
+                if not (mapTalk or mapUse or mapInspect or mapTake or mapApply):
                     self.log.warning ('Scene interaction %s has no action maps.' % interaction.name)
 
                 paramActions = params.get('actions')
@@ -362,25 +365,36 @@ class WorldCompiler (object):
         if not tmpl_name == 'ActionMap':
             self.log.error ('Argument action-map contains unexpected template %s' % tmpl_name)
             return []
-        if len(template.params) == 0:
+        
+        params = TemplateDict.from_template(template)
+        if len(params) == 0:
             self.log.warning ('Created an empty action map.')
             return []
 
         actions = []
+        verb = params.gettext('verb')
+        connective = params.gettext('connective')
+
+        # Track how many actions will be inaccessible due to catchall conditions
         nInaccessible = 0
         catchallExists = False
+
         for param in template.params:
-            # Ignore the 'name' parameter for now
-            if param.name.strip() == 'name': continue
+            # Ignore the named parameters
+            paramName = param.name.strip()
+            if paramName == 'verb' or paramName == 'connective': continue
+
             # Each numbered param should contain a single 'When' template
             child_source = param.value
             child_templates = child_source.filter_templates(recursive=False)
+
             if len(child_templates) == 0:
                 self.log.warning ('Skipping ActionMap argument containing no templates (expecting a "When" template)')
                 continue
             if len(child_templates) > 1:
                 self.log.warning ('Skipping extraneous data in ActionMap argument (expecting a single "When" template)')
                 continue
+
             tmpl_when = child_templates[0]
             tmpl_when_name = tmpl_when.name.strip()
             if not tmpl_when_name == 'When':
@@ -389,12 +403,20 @@ class WorldCompiler (object):
 
             if catchallExists:
                 nInaccessible += 1
+
             action = gaff.world.ActionMapping ()
-            action.condition = tmpl_when.get(1).strip()
+            whenParams = TemplateDict.from_template(tmpl_when)
+            action.item = whenParams.gettext('item')
+            action.condition = whenParams.gettext('condition')
+            action.action = whenParams.gettext('action')
+            # We'll add support for contextual verbs and connectives later...
+            action.verb = verb
+            action.connective = connective
+
             if not action.condition:
                 catchallExists = True
                 action.condition = None
-            action.action = tmpl_when.get(2).strip()
+
             actions.append(action)
 
         if nInaccessible:

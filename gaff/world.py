@@ -94,6 +94,9 @@ class ActionMapping (object):
     def __init__ (self):
         self.condition = None
         self.action = None
+        self.item = None
+        self.verb = None
+        self.connective = None
 
 class World (object):
     def __init__ (self):
