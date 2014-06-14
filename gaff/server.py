@@ -26,7 +26,7 @@ def world():
 @app.route("/compile")
 def compile():
     logger = gaff.log.EventLogger(info=[],error=[],warning=[])
-    logger.info ('Processing compile request.')
+    logger.info ('Received compilation request.')
     compiler_output = ""
     try:
         api = gaff.api.WikiAPI (API_URI, API_USERNAME, API_PASSWORD, log=logger)
